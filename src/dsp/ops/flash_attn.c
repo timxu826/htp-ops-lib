@@ -139,7 +139,7 @@ void fa_f16_find_chunk_size(size_t *blk_r, size_t *blk_c, int gqa_factor, int he
 void simple_flash_attn_f16_core(int kv_head_idx, uint8_t *vtcm, uint8_t *vtcm_limit, __fp16 *restrict O,
                                 const __fp16 *restrict Q, const __fp16 *restrict K, const __fp16 *restrict V,
                                 const __fp16 *restrict qk_mask, int qo_len, int kv_len, int n_heads, int n_kv_heads,
-                                int head_dim) {
+                                int head_dim, int worker_index) {
   // "compile-time" configs
   // TODO: make them real compile-time constants (constexpr or template parameters)
   const int G = n_heads / n_kv_heads;  // GQA factor
@@ -148,7 +148,10 @@ void simple_flash_attn_f16_core(int kv_head_idx, uint8_t *vtcm, uint8_t *vtcm_li
   const bool   qo_fp32_element = true;  // whether Q/O has fp32 elements
   const size_t qo_element_size = qo_fp32_element ? sizeof(float) : sizeof(__fp16);
 
-  const bool   has_qk_mask = (qk_mask != NULL);
+  // NOTE(hzx): confirmed that non-constant `has_qk_mask` affects softmax performance, disable it for now
+  assert(qk_mask != NULL);
+  // const bool   has_qk_mask = (qk_mask != NULL);
+  const bool   has_qk_mask = true;
   const size_t kv_pad_len  = align_up(kv_len, 64);
 
   const bool enable_vgather_exp = true;   // use table lookup (vgather) to compute exp, experimental
@@ -228,7 +231,11 @@ void simple_flash_attn_f16_core(int kv_head_idx, uint8_t *vtcm, uint8_t *vtcm_li
   }
 
   // alternative computation method
-  void *vtcm_exp2_table = vtcm_manager_query_area("safe_softmax::exp2_hf_qf16");
+  const int    sub_table_idx  = worker_index % 4;
+  const size_t sub_table_size = 65536;
+
+  uint8_t *vtcm_exp2_table_base = vtcm_manager_query_area("safe_softmax::exp2_hf_qf16");
+  uint8_t *vtcm_exp2_table      = vtcm_exp2_table_base + sub_table_idx * sub_table_size;
   if (!enable_vgather_exp) {
     (void) vtcm_exp2_table;
   }
@@ -448,7 +455,7 @@ void simple_flash_attn_f16_core(int kv_head_idx, uint8_t *vtcm, uint8_t *vtcm_li
               if (has_qk_mask) {
                 HVX_Vector v_mask0 = vmemu(qk_mask + q_idx0 * kv_pad_len + k_idx);
                 HVX_Vector v_mask1 = vmemu(qk_mask + q_idx1 * kv_pad_len + k_idx);
-              
+
                 const HVX_Vector v_fp16_mask_threshold = Q6_Vh_vsplat_R(0xcc00);  // fp16: -16.0
 
                 q_mask_keep0 = Q6_Q_vcmp_gt_VhfVhf(v_mask0, v_fp16_mask_threshold);
@@ -1345,7 +1352,7 @@ void simple_flash_attn_worker(void *data, int worker_index) {
 
     int kv_head_idx = task_id;
     simple_flash_attn_f16_core(kv_head_idx, vtcm, vtcm_limit, s->O, s->Q, s->K, s->V, s->mask, s->qo_len, s->kv_len,
-                               s->n_heads, s->n_kv_heads, s->head_dim);
+                               s->n_heads, s->n_kv_heads, s->head_dim, worker_index);
   }
 
   hmx_manager_disable_execution();
