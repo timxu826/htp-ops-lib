@@ -39,6 +39,10 @@ if(${OS_TYPE} MATCHES "HLOS")
     add_executable(htp_ops_test
         ${CMAKE_CURRENT_SOURCE_DIR}/src/host/test.c
     )
+
+    # host side turn on debug information
+    target_compile_options(htp_ops PRIVATE -g -O0)
+    target_compile_options(htp_ops_test PRIVATE -g -O0)
     
     # Add common HLOS-specific linker options
     set_common_compile_and_link_options(htp_ops_test)
@@ -81,6 +85,9 @@ else()
         ${CMAKE_CURRENT_SOURCE_DIR}/src/dsp/ops/mm_benchmark.c
     )
     build_idl(include/htp_ops.idl htp_ops_skel)
+
+    # DSP side turn on debug information
+    target_compile_options(htp_ops_skel PRIVATE -g -O0)
 
     # Enable HMX inline assembly
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mhmx")
