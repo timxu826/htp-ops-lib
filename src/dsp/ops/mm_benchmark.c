@@ -38,6 +38,35 @@ int hmx_mat_mul_fp16_core(__fp16 *restrict __vtcm c, const __fp16 *restrict __vt
   return 0;
 }
 
+int hmx_mat_mul_ub_core(uint8_t *restrict __vtcm c, const uint8_t *restrict __vtcm a, const uint8_t *restrict __vtcm b,
+                        uint8_t *restrict __vtcm scales, int M, int K, int N) {
+  if (M % 32 != 0 || K % 32 != 0 || N % 32 != 0) {
+    return -1;
+  }
+
+  // number of tiles
+  int mt = M / 32;
+  int nt = N / 32;
+  int kt = K / 32;
+
+  hmx_init_column_scales(scales, Q6_V_vsplat_R(0));
+  hmx_set_output_scales(scales);
+
+  for (int i = 0; i < mt; ++i) {
+    for (int j = 0; j < nt; ++j) {
+      const uint8_t *a_tiles = a + i * kt * HMX_UB_TILE_N_ELMS;
+      const uint8_t *b_tiles = b + j * kt * HMX_UB_TILE_N_ELMS;
+      uint8_t       *c_tile  = c + (i * nt + j) * HMX_UB_TILE_N_ELMS;
+
+      for (int k = 0; k < kt; k += 32) {
+        hmx_load_tiles_ub(a_tiles + k * HMX_UB_TILE_N_ELMS, b_tiles + k * HMX_UB_TILE_N_ELMS, smin(kt - k, 32));
+      }
+      hmx_consume_accumulator_ub(c_tile);
+    }
+  }
+  return 0;
+}
+
 // This assumes all operands are located in VTCM. Accumulator type: qf16
 int hvx_mat_mul_fp16_core(__fp16 *restrict __vtcm c, const __fp16 *restrict __vtcm a, const __fp16 *restrict __vtcm b,
                           int M, int K, int N) {
