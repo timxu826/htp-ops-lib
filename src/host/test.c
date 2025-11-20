@@ -6,11 +6,17 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <android/log.h>
 
 #include "host/session.h"
 #include "htp_ops.h"  // auto-generated
 #include "message.h"
 #include "op_reg.h"
+
+#define LOG_TAG "MyCppLog"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,  LOG_TAG, __VA_ARGS__)
+#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
 static inline int64_t get_time_us() {
   struct timespec ts;
@@ -340,18 +346,27 @@ static void test_mat_mul_rpc(remote_handle64 handle) {
 }
 
 int main(int argc, char **argv) {
+  printf("Starting test program...\n");
+  fprintf(stdout, "Opening DSP session...\n");
+  fflush(stdout);
+  LOGI("Opening DSP session...");
   int err = open_dsp_session(CDSP_DOMAIN_ID, 1);
   if (err != 0) {
     fprintf(stderr, "Open DSP session failed\n");
     return 1;
   }
-
+  LOGI("DSP session opened");
+  printf("DSP session opened\n");
   init_htp_backend();
-
+  fprintf(stdout, "HTP backend initialized\n");
+  fflush(stdout);
+  LOGI("HTP backend initialized");
   // test_mat_mul_rpc(get_global_handle());
 
   htp_ops_test_ops(get_global_handle());
-
+  fprintf(stdout, "htp_ops_test_ops finished\n");
+  fflush(stdout);
+  LOGI("htp_ops_test_ops finished");
   /*
   test_rms_norm_f32_rpc(get_global_handle(), 60000);
 
@@ -381,5 +396,7 @@ skip2:
 
 skip1:
   close_dsp_session();
+  fprintf(stdout, "test program finished\n");
+  fflush(stdout);
   return 0;
 }
