@@ -2,3 +2,5 @@
 android*
 hexagon*
 
+*.log
+log/*
