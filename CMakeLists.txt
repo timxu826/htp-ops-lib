@@ -15,6 +15,7 @@ set(ignoreVar ${DEPENDENCIES}${V})
 # NOTE(hzx): QAIC generated code are located in ${CMAKE_CURRENT_BINARY_DIR}
 set(common_incs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/
     ${CMAKE_CURRENT_BINARY_DIR}
     ${HEXAGON_SDK_ROOT}/incs/
     ${HEXAGON_SDK_ROOT}/incs/stddef/

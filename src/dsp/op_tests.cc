@@ -132,6 +132,34 @@ void benchmark_hmx_gemm() {
   hmx_manager_disable_execution();
 }
 
+void benchmark_hmx_gemm_ub() {
+  uint8_t *vtcm = (uint8_t *) vtcm_manager_get_vtcm_base();
+
+  uint8_t *a = vtcm;
+  uint8_t *b = vtcm + 2 * 0x100000;
+  uint8_t *c = vtcm + 4 * 0x100000;
+  uint8_t *s = vtcm + 6 * 0x100000;
+
+  int n_repeat = 1000;
+  int sizes[]  = { 32, 64, 128, 256, 512, 1024 };
+
+  hmx_manager_enable_execution();
+  for (int i = 0; i < sizeof(sizes) / sizeof(int); ++i) {
+    int64_t n = sizes[i];
+
+    int64_t t0 = HAP_perf_get_qtimer_count();
+    for (int t = 0; t < n_repeat; ++t) {
+      hmx_mat_mul_ub_core(c, a, b, s, n, n, n);
+    }
+    int64_t t1         = HAP_perf_get_qtimer_count();
+    int64_t elapsed_us = HAP_perf_qtimer_count_to_us(t1 - t0);
+
+    double gflops = 1e-3 * n_repeat * (2 * n * n * n) / elapsed_us;
+    FARF(ALWAYS, "%s: core ub hmx: %.2lf GFLOPS@n=%lld, %lld us", __func__, gflops, n, elapsed_us);
+  }
+  hmx_manager_disable_execution();
+}
+
 void benchmark_hvx_gemm() {
   uint8_t *vtcm = (uint8_t *) vtcm_manager_get_vtcm_base();
 
@@ -287,6 +315,7 @@ void internal_op_tests() {
   // test_fp16_exp2();
 
   // benchmark_hmx_gemm();
+  // benchmark_hmx_gemm_ub();
   // benchmark_hvx_gemm();
   // benchmark_vtcm_bandwidth();
 }

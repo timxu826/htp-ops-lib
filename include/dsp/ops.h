@@ -31,6 +31,8 @@ int naive_flash_attn(float *restrict O, const float *restrict Q, const __fp16 *r
 
 int hmx_mat_mul_fp16_core(__fp16 *restrict __vtcm c, const __fp16 *restrict __vtcm a, const __fp16 *restrict __vtcm b,
                           __fp16 *restrict __vtcm scales, int m, int k, int n);
+int hmx_mat_mul_ub_core(uint8_t *restrict __vtcm c, const uint8_t *restrict __vtcm a, const uint8_t *restrict __vtcm b,
+                        uint8_t *restrict __vtcm scales, int m, int k, int n);
 
 int hvx_mat_mul_fp16_core(__fp16 *restrict __vtcm c, const __fp16 *restrict __vtcm a, const __fp16 *restrict __vtcm b,
                           int m, int k, int n);
