@@ -1,0 +1,2 @@
+build_cmake android
+build_cmake hexagon DSP_ARCH=v75
