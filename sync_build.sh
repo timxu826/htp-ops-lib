@@ -12,8 +12,5 @@ adb push ./hexagon_ReleaseG_toolv19_v75 $HEXAGON_PATH
 # adb push ./htp_ops_test $LIB_PATH/htp_ops_test
 adb shell chmod +x $ANDROID_PATH/htp_ops_test
 
-# debug files 
-adb push htp_ops_test.debugconfig $ANDROID_PATH/
-adb push htp_ops_test.debugconfig $HEXAGON_PATH/
 
 adb shell LD_LIBRARY_PATH=$ANDROID_PATH ADSP_LIBRARY_PATH=$HEXAGON_PATH $ANDROID_PATH/htp_ops_test
