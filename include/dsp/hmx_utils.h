@@ -57,7 +57,12 @@ static HMX_INLINE_ALWAYS void hmx_consume_accumulator_fp16(__fp16 *out) {
 }
 
 static HMX_INLINE_ALWAYS void hmx_consume_accumulator_ub(uint8_t *out) {
-  Q6_mxmem_AR_before_cm_sat_ub(out, 0);
+  // Q6_mxmem_AR_before_cm_sat_ub(out, 0);
+  asm volatile(
+    "cvt.ub = acc(%0)\n"
+    "mxmem(%1, %2) = cvt\n" ::"r"(2),
+    "r"(out), "r"(0)
+    : "memory");
 }
 
 // compute inner product of two vectors of tiles

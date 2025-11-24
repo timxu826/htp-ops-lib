@@ -1,3 +1,6 @@
+#define FARF_HIGH 1 // to enable high level FARF logs
+#define FARF_ALWAYS 1 // to enable high level FARF logs
+
 #include <HAP_farf.h>
 #include <HAP_perf.h>
 
@@ -310,13 +313,13 @@ void internal_op_tests();
 
 void internal_op_tests() {
   using namespace internal;
-
+  FARF(ALWAYS, "internal_op_tests started");
   // test_int16_fp16_conversion();
   // test_fp16_exp2();
 
-  // benchmark_hmx_gemm();
-  // benchmark_hmx_gemm_ub();
-  // benchmark_hvx_gemm();
+  benchmark_hmx_gemm();
+  benchmark_hvx_gemm();
   // benchmark_vtcm_bandwidth();
+  FARF(ALWAYS, "internal_op_tests finished");
 }
 }
