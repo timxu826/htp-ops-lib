@@ -319,6 +319,7 @@ void internal_op_tests() {
 
   benchmark_hmx_gemm();
   benchmark_hvx_gemm();
+  benchmark_hmx_gemm_ub();
   // benchmark_vtcm_bandwidth();
   FARF(ALWAYS, "internal_op_tests finished");
 }

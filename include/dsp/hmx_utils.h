@@ -42,8 +42,8 @@ static HMX_INLINE_ALWAYS void hmx_load_tiles_fp16(const __fp16 *row_tiles, const
 static HMX_INLINE_ALWAYS void hmx_load_tiles_ub(const uint8_t *row_tiles, const uint8_t *col_tiles, size_t n_tiles) {
   size_t limit = n_tiles * HMX_UB_TILE_SIZE - 1;
   asm volatile(
-    "{ activation.ub = mxmem(%0, %1):deep:cm\n"
-    "weight.ub = mxmem(%2, %3):cm }\n" ::"r"(row_tiles),
+    "{ activation.ub = mxmem(%0, %1):deep\n"
+    "weight.ubit = mxmem(%2, %3) }\n" ::"r"(row_tiles),
     "r"(limit), "r"(col_tiles), "r"(limit)
     : "memory");
 }
